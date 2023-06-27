@@ -1,130 +1,200 @@
+const formData = document.querySelectorAll(".formData");
+let submitBtn = document.querySelector(".btn-submit");
 // validate data function
 function validateForm(e) {
-    const firstName = document.querySelector('#firstName').value;
-    const lastName = document.querySelector('#lastName').value;
-    const email = document.querySelector('#email').value;
-    const birthdate = document.querySelector('#birthdate').value;
-    const tournamentQuantity = document.querySelector('#quantity').value;
-    
-    e.preventDefault()
-    if(validateFirstName(firstName) && validateLastName(lastName) && validateEmail(email) && validateBirthdate(birthdate) && validateTournamentQuantity(tournamentQuantity) && validateLocation() && validateTermsOfUse()) {
-        console.log("formulaire valide")
-    }else {
-        throw new Error;
-    }
-};
+  if (checkAll()) {
+    console.log("formulaire valide");
 
-const formData = document.querySelectorAll('.formData')
+    formData.forEach((element) => (element.style.display = "none"));
 
-function validateFirstName(firstName){
+    submitBtn.style.display = "none";
 
-    if (firstName === "" || firstName.length < 2) {
-        formData[0].className = "formData";
-        formData[0].dataset.error = "Veuillez entrer 2 caractères ou plus pour le champ du prénom.";
-        formData[0].dataset.errorVisible = "true";
-        
-        return false
-    }else {
-        delete formData[0].dataset.error;
-        delete formData[0].dataset.errorVisible;
-        
-        return true
-    }
+    showMsgConfirmation();
+    formData.forEach((element) => (element.value = ""));
+  }
+  e.preventDefault();
+}
+
+function showMsgConfirmation() {
+  let validationMessage = document.createElement("p");
+  validationMessage.className = "confirmation";
+  validationMessage.innerHTML = "Merci pour votre inscription.";
+
+  let closeBtn = document.createElement("input");
+  closeBtn.className = "btn-submit";
+  closeBtn.value = "Fermer";
+
+  let confirmationWrapper = document.createElement("div");
+  confirmationWrapper.className = "modal-confirmation";
+  confirmationWrapper.appendChild(validationMessage);
+  confirmationWrapper.appendChild(closeBtn);
+
+  let modalbody = document.getElementsByClassName("modal-body");
+  modalbody[0].appendChild(confirmationWrapper);
+
+	
+  closeBtn.addEventListener("click", () => {
+		displayForm()
+		resetForm()
+	});
+}
+
+function resetForm() {
+	const form = document.querySelector("form[name='reserve']");
+	form.reset()
+}
+
+
+
+function displayForm() {
+	const modalbg = document.querySelector(".bground");
+	modalbg.style.display = "none";
+
+	formData.forEach((element) => (element.style.display = "block"));
+	
+	submitBtn.style.display = "block";
+}
+
+function checkAll() {
+  const firstName = document.querySelector("#firstName");
+  const lastName = document.querySelector("#lastName").value;
+  const email = document.querySelector("#email").value;
+  const birthdate = document.querySelector("#birthdate").value;
+  const tournamentQuantity = document.querySelector("#quantity").value;
+  const location = document.querySelectorAll("input[name='location']");
+
+  return (
+    validateFirstName(firstName.value) &&
+    validateLastName(lastName) &&
+    validateEmail(email) &&
+    validateBirthdate(birthdate) &&
+    validateTournamentQuantity(tournamentQuantity) &&
+    validateLocation(location) &&
+    validateTermsOfUse()
+  );
+}
+
+function validateData(indexFormData, msgErreur, ruleOfControl, field) {
+  let error = false;
+  const regexEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+
+  switch (ruleOfControl) {
+    case "identity":
+      if (field === "" || field.length < 2) {
+        error = true;
+      }
+      break;
+
+    case "email":
+      if (!field.match(regexEmail)) {
+        error = true;
+      }
+      break;
+
+    case "date":
+      if (!field) {
+        error = true;
+      }
+      break;
+
+    case "quantity":
+      if (field === "" || field < 0 || field > 99) {
+        error = true;
+      }
+      break;
+
+    case "termsOfUse":
+      if (field.checked) {
+        error = false;
+      } else {
+        error = true;
+      }
+      break;
+    case "location":
+      let hasChecked = false;
+      for (let i = 0; i < field.length; i++) {
+        if (field[i].checked) {
+          hasChecked = true;
+        }
+      }
+      error = !hasChecked;
+
+      break;
+  }
+
+  if (error === true) {
+    formData[indexFormData].className = "formData";
+    formData[indexFormData].dataset.error = msgErreur;
+    formData[indexFormData].dataset.errorVisible = "true";
+  } else {
+    delete formData[indexFormData].dataset.error;
+    delete formData[indexFormData].dataset.errorVisible;
+  }
+
+  return !error;
+}
+
+function validateFirstName(firstName) {
+  return validateData(
+    0,
+    "Veuillez entrer 2 caractères ou plus pour le champ du prénom.",
+    "identity",
+    firstName
+  );
 }
 
 function validateLastName(lastName) {
-    if (lastName === "" || lastName.length < 2) {
-        formData[1].className = "formData";
-        formData[1].dataset.error = "Veuillez entrer 2 caractères ou plus pour le champ du nom.";
-        formData[1].dataset.errorVisible = "true";
-        
-        return false
-    }else {
-        delete formData[1].dataset.error;
-        delete formData[1].dataset.errorVisible;
-        
-        return true
-    }
+  return validateData(
+    1,
+    "Veuillez entrer 2 caractères ou plus pour le champ du nom.",
+    "identity",
+    lastName
+  );
 }
 
 function validateEmail(email) {
-    const regexEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!email.match(regexEmail)) {
-        formData[2].className = "formData";
-        formData[2].dataset.error = "Veuillez entrer une adress email valide.";
-        formData[2].dataset.errorVisible = "true";
-        
-        return false
-    }else {
-        delete formData[2].dataset.error;
-        delete formData[2].dataset.errorVisible;
-        
-        return true
-    }
+  return validateData(
+    2,
+    "Veuillez entrer une adresse email valide.",
+    "email",
+    email
+  );
 }
 
-function validateBirthdate(date){
-    if(!date) {
-        formData[3].className = "formData";
-        formData[3].dataset.error = "Vous devez entrer votre date de naissance.";
-        formData[3].dataset.errorVisible = "true";
-        
-        return false
-    }else {
-        delete formData[3].dataset.error;
-        delete formData[3].dataset.errorVisible;
-        
-        return true
-    }
-
+function validateBirthdate(date) {
+  return validateData(
+    3,
+    "Vous devez entrer votre date de naissance.",
+    "date",
+    date
+  );
 }
 
-function validateTournamentQuantity(quantity){
-    if (quantity === "" || quantity < 0 || quantity > 99) {
-        formData[4].className = "formData";
-        formData[4].dataset.error = "Vous devez entrer une valeur numérique.";
-        formData[4].dataset.errorVisible = "true";
-
-        return false
-    }else {
-        delete formData[4].dataset.error;
-        delete formData[4].dataset.errorVisible;
-
-        return true
-    }
+function validateTournamentQuantity(quantity) {
+  return validateData(
+    4,
+    "Vous devez entrer une valeur numérique.",
+    "quantity",
+    quantity
+  );
 }
 
-function validateLocation(){
-    const radios = document.querySelectorAll("input[name='location']");
-
-    for (let i = 0; i < radios.length; i++) {
-        if(radios[i].checked) {
-            delete formData[5].dataset.error;
-            delete formData[5].dataset.errorVisible;
-            
-            return true
-        }
-    }
-    formData[5].className = "formData";
-    formData[5].dataset.error = "Vous devez choisir une option.";
-    formData[5].dataset.errorVisible = "true";
-
-    return false
+function validateLocation(location) {
+  return validateData(
+    5,
+    "Vous devez choisir une destination.",
+    "location",
+    location
+  );
 }
 
 function validateTermsOfUse() {
-    const checkbox = document.querySelector('#termsOfUse')
+  const checkbox = document.querySelector("#termsOfUse");
 
-    if(checkbox.checked){
-        delete formData[6].dataset.error;
-        delete formData[6].dataset.errorVisible;
-        
-        return true
-    }else {
-        formData[6].className = "formData";
-        formData[6].dataset.error = "Vous devez vérifier que vous acceptez les termes et conditions.";
-        formData[6].dataset.errorVisible = "true";
-
-        return false
-    }
+  return validateData(
+    6,
+    "Vous devez vérifier que vous acceptez les termes et conditions.",
+    "termsOfUse",
+    checkbox
+  );
 }

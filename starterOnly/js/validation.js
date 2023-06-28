@@ -1,6 +1,9 @@
+// DOM Elements
 const formData = document.querySelectorAll(".formData");
 let submitBtn = document.querySelector(".btn-submit");
-// validate data function
+
+// fonction qui vient cacher tous les inputs de la modale et
+// afficher le message de confirmation si la fonction "checkAll" renvoie true
 function validateForm(e) {
   if (checkAll()) {
     console.log("formulaire valide");
@@ -10,11 +13,12 @@ function validateForm(e) {
     submitBtn.style.display = "none";
 
     showMsgConfirmation();
-    formData.forEach((element) => (element.value = ""));
   }
   e.preventDefault();
 }
 
+// fonction qui vient modifier me DOM en créant et affichant un message de confirmation
+// et un bouton de fermeture de la modale
 function showMsgConfirmation() {
   let validationMessage = document.createElement("p");
   validationMessage.className = "confirmation";
@@ -32,35 +36,38 @@ function showMsgConfirmation() {
   let modalbody = document.getElementsByClassName("modal-body");
   modalbody[0].appendChild(confirmationWrapper);
 
-	
+  // écouteur d'événement qui vient fermer la modale et appeler les fonctions
+  // "displayForm" et "resetForm" au clic
   closeBtn.addEventListener("click", () => {
-		displayForm()
-		resetForm()
-	});
+    const modalbg = document.querySelector(".bground");
+    modalbg.style.display = "none";
+    displayForm();
+    resetForm();
+  });
 }
 
+// remet à zero le contenu du formulaire
 function resetForm() {
-	const form = document.querySelector("form[name='reserve']");
-	form.reset()
+  const form = document.querySelector("form[name='reserve']");
+  form.reset();
 }
 
-
-
+// fonction qui vient réafficher tous les inputs
+// ainsi que le bouton submit du formulaire
 function displayForm() {
-	const modalbg = document.querySelector(".bground");
-	modalbg.style.display = "none";
-
-	formData.forEach((element) => (element.style.display = "block"));
-	
-	submitBtn.style.display = "block";
+  formData.forEach((element) => (element.style.display = "block"));
+  submitBtn.style.display = "block";
 }
 
+// fonction qui appelle le validateur relatif à chaque champ du formulaire
+// et retourne true si tous les champs sont correctement remplis
 function checkAll() {
   const firstName = document.querySelector("#firstName");
   const lastName = document.querySelector("#lastName").value;
   const email = document.querySelector("#email").value;
   const birthdate = document.querySelector("#birthdate").value;
   const tournamentQuantity = document.querySelector("#quantity").value;
+  const checkbox = document.querySelector("#termsOfUse");
   const location = document.querySelectorAll("input[name='location']");
 
   return (
@@ -70,46 +77,50 @@ function checkAll() {
     validateBirthdate(birthdate) &&
     validateTournamentQuantity(tournamentQuantity) &&
     validateLocation(location) &&
-    validateTermsOfUse()
+    validateTermsOfUse(checkbox)
   );
 }
 
+// fonction qui permet de créer plusieurs cas, si le cas est confirmé alors on affiche
+// le message d'erreur correspondant sinon on teste le cas suivant
 function validateData(indexFormData, msgErreur, ruleOfControl, field) {
   let error = false;
   const regexEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
   switch (ruleOfControl) {
+    // si le champ est vide ou qu'il compte moins de deux caractères alors
+    // on affiche un message d'erreur
     case "identity":
       if (field === "" || field.length < 2) {
         error = true;
       }
       break;
 
+    // si l'email entré ne correspond pas au pattern du regex alors
+    // on affiche un message d'erreur
     case "email":
       if (!field.match(regexEmail)) {
         error = true;
       }
       break;
 
+    // si aucune date n'est entrée alors on affiche le message d'erreur
     case "date":
       if (!field) {
         error = true;
       }
       break;
 
+    // si la valeurs est inférieure à 0, ou suppérieure à 99, ou vide alors
+    // on affiche le message d'erreur
     case "quantity":
       if (field === "" || field < 0 || field > 99) {
         error = true;
       }
       break;
 
-    case "termsOfUse":
-      if (field.checked) {
-        error = false;
-      } else {
-        error = true;
-      }
-      break;
+    // on vient vérifier pour chaque bouton radio si il est checked, si aucun ne l'est alors
+    // on assigne true à error et donc on affiche le message d'erreur
     case "location":
       let hasChecked = false;
       for (let i = 0; i < field.length; i++) {
@@ -118,10 +129,20 @@ function validateData(indexFormData, msgErreur, ruleOfControl, field) {
         }
       }
       error = !hasChecked;
+      break;
 
+    // on affiche le message d'erreur si la checkbox des conditions d'utilisations n'est pas cochée
+    case "termsOfUse":
+      if (field.checked) {
+        error = false;
+      } else {
+        error = true;
+      }
       break;
   }
 
+  // quand error est true on vient afficher le message d'erreur et appeler les
+  // data attributes qui afichent le css d'erreur
   if (error === true) {
     formData[indexFormData].className = "formData";
     formData[indexFormData].dataset.error = msgErreur;
@@ -134,6 +155,8 @@ function validateData(indexFormData, msgErreur, ruleOfControl, field) {
   return !error;
 }
 
+// pour chaque fonction validate on cible l'input grâce à son index, on spécifie le message d'erreur
+// on cible le case à verifier et on a comme argument la value de l'input récupéré dans le DOM
 function validateFirstName(firstName) {
   return validateData(
     0,
@@ -164,7 +187,7 @@ function validateEmail(email) {
 function validateBirthdate(date) {
   return validateData(
     3,
-    "Vous devez entrer votre date de naissance.",
+    "Veuillez entrer votre date de naissance.",
     "date",
     date
   );
@@ -173,7 +196,7 @@ function validateBirthdate(date) {
 function validateTournamentQuantity(quantity) {
   return validateData(
     4,
-    "Vous devez entrer une valeur numérique.",
+    "Veuillez entrer une valeur numérique valide.",
     "quantity",
     quantity
   );
@@ -182,18 +205,16 @@ function validateTournamentQuantity(quantity) {
 function validateLocation(location) {
   return validateData(
     5,
-    "Vous devez choisir une destination.",
+    "Veuillez choisir une destination.",
     "location",
     location
   );
 }
 
-function validateTermsOfUse() {
-  const checkbox = document.querySelector("#termsOfUse");
-
+function validateTermsOfUse(checkbox) {
   return validateData(
     6,
-    "Vous devez vérifier que vous acceptez les termes et conditions.",
+    "Veuillez vérifier que vous acceptez les termes et conditions.",
     "termsOfUse",
     checkbox
   );
